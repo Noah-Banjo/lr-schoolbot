@@ -62,18 +62,60 @@ if 'messages' not in st.session_state:
         {"role": "system", "content": SYSTEM_PROMPT}
     ]
 
+# Modify the get_assistant_response function
 def get_assistant_response(messages):
     """Get response from OpenAI API"""
     try:
-        response = openai.chat.completions.create(  # Updated this line
+        response = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=messages,
-            temperature=0.7
+            temperature=0.8,  # Slightly higher for more conversational tone
+            presence_penalty=0.6,  # Encourage bringing in new information
+            frequency_penalty=0.3  # Reduce repetition
         )
-        return response.choices[0].message.content  # Updated this line
+        
+        # Get the response
+        bot_response = response.choices[0].message.content
+        
+        # If it seems appropriate, add a follow-up question
+        if not bot_response.endswith("?") and len(messages) > 2:
+            bot_response += "\n\nWould you like to know more about any part of that? I'd love to share more details about whatever interests you most!"
+            
+        return bot_response
     except Exception as e:
         st.error(f"Error: {str(e)}")
         return None
+
+# In the chat section, add a context display
+if page == "💬 Chat with LR SchoolBot":
+    st.markdown('<p class="big-font">Chat with LR SchoolBot! 🤖</p>', unsafe_allow_html=True)
+    
+    # Chat interface in a container
+    chat_container = st.container()
+    with chat_container:
+        st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+        
+        # Show active topics (optional)
+        if len(st.session_state['messages']) > 2:
+            recent_topics = set()
+            for msg in st.session_state['messages'][-3:]:
+                if msg["role"] == "user":
+                    recent_topics.add(msg["content"].lower())
+            if recent_topics:
+                st.markdown("#### 🎯 We've been talking about:")
+                for topic in recent_topics:
+                    st.markdown(f"- {topic}")
+                st.markdown("---")
+
+        with st.form(key='message_form', clear_on_submit=True):
+            user_input = st.text_area("What would you like to know? 🤔", key='input', height=100)
+            submit_button = st.form_submit_button("Let's talk! 💬")
+
+            if submit_button and user_input:
+                st.session_state['messages'].append({"role": "user", "content": user_input})
+                response = get_assistant_response(st.session_state['messages'])
+                if response:
+                    st.session_state['messages'].append({"role": "assistant", "content": response})
 
 # Sidebar with fun design
 with st.sidebar:
