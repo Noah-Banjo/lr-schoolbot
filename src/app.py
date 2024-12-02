@@ -39,6 +39,20 @@ st.markdown("""
     .sidebar .sidebar-content {
         background-image: linear-gradient(#4CAF50,#2196F3);
     }
+    .source-card {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 10px 0;
+        border-left: 5px solid #1E88E5;
+    }
+    .about-section {
+        background-color: #ffffff;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 10px 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -48,8 +62,8 @@ if 'messages' not in st.session_state:
         {"role": "system", "content": SYSTEM_PROMPT}
     ]
 
-# Get assistant response function (same as before)
 def get_assistant_response(messages):
+    """Get response from OpenAI API"""
     try:
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -154,4 +168,172 @@ elif page == "💬 Chat with LR SchoolBot":
                     st.markdown(f"🤖 **SchoolBot:** {message['content']}")
         st.markdown('</div>', unsafe_allow_html=True)
 
-# Continue with other pages...
+elif page == "🗺️ School Locations":
+    st.markdown('<p class="big-font">Find the Historic Schools! 🗺️</p>', unsafe_allow_html=True)
+    
+    # Introduction to the locations
+    st.markdown("""
+    ### 📍 Explore These Historic Locations
+    Want to visit these amazing schools? Here's where you can find them! The map below shows both 
+    Central High School and the historic Dunbar High School building.
+    """)
+    
+    def create_school_map():
+        # Create a map centered between the two schools
+        m = folium.Map(location=[34.7370, -92.2986], zoom_start=13)
+        
+        # Add Central High School marker
+        central_popup = """
+        <b>Little Rock Central High School</b><br>
+        1500 S Park St, Little Rock, AR 72202<br>
+        <br>
+        🏛️ National Historic Site<br>
+        🕒 Visitor Center Hours: 9 AM - 4:30 PM<br>
+        📞 Phone: (501) 374-1957<br>
+        <br>
+        <a href="https://www.nps.gov/chsc/" target="_blank">Visit Website</a>
+        """
+        
+        folium.Marker(
+            [34.7367, -92.2980],
+            popup=central_popup,
+            tooltip="Central High School",
+            icon=folium.Icon(color='red', icon='info-sign')
+        ).add_to(m)
+        
+        # Add Dunbar High School marker
+        dunbar_popup = """
+        <b>Historic Dunbar High School</b><br>
+        (Now Dunbar Magnet Middle School)<br>
+        1100 Wright Ave, Little Rock, AR 72202<br>
+        <br>
+        🏫 Historic Site<br>
+        📚 Part of Little Rock's African American Heritage Trail<br>
+        🎓 Historic Landmark
+        """
+        
+        folium.Marker(
+            [34.7399, -92.2867],
+            popup=dunbar_popup,
+            tooltip="Historic Dunbar High School",
+            icon=folium.Icon(color='blue', icon='info-sign')
+        ).add_to(m)
+        
+        return m
+    
+    # Display the map
+    map_obj = create_school_map()
+    folium_static(map_obj)
+    
+    # Additional information about visiting
+    st.markdown("""
+    ### 📸 Planning Your Visit
+    
+    #### Central High School National Historic Site
+    - 🏛️ Still an active high school
+    - 🎟️ Free admission to visitor center
+    - 🚶‍♂️ Guided tours available (reservation required)
+    - 📚 Museum exhibits and educational programs
+    - 🖼️ Historic photographs and artifacts
+    
+    #### Historic Dunbar High School
+    - 🏫 Now Dunbar Magnet Middle School
+    - 🗺️ Part of the Little Rock African American Heritage Trail
+    - 📝 Historical markers on site
+    - 🎨 Cultural significance in the community
+    - 🌟 Architectural landmark
+    
+    ### 🚗 Getting There
+    - Both sites are easily accessible by car
+    - Public parking available
+    - Located in historic Little Rock neighborhoods
+    - Can be visited in the same day
+    
+    ### 📸 Tips for Visitors
+    1. Check visitor center hours before going
+    2. Respect active school zones during school hours
+    3. Photography allowed outside buildings
+    4. Join guided tours when available
+    5. Visit during good weather for best experience
+    """)
+
+elif page == "ℹ️ About":
+    st.markdown('<p class="big-font">About LR SchoolBot 🤖</p>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    <div class="about-section">
+    <h3>👋 Meet Your Educational Guide!</h3>
+    
+    I'm LR SchoolBot, your friendly guide to exploring the rich educational heritage of Little Rock! 
+    I'm here to share stories, facts, and history about two incredible schools that have shaped 
+    our community: Central High School and Dunbar High School.
+    
+    ### 🎯 My Purpose
+    - Share the amazing history of these schools
+    - Help people learn about civil rights and education
+    - Connect you with historical resources
+    - Make learning history fun and interactive!
+    
+    ### 🎓 My Knowledge
+    I'm trained on carefully selected historical sources and scholarly works about both schools. 
+    While I know a lot, I'm always happy to direct you to additional resources for deeper research!
+    
+    ### 💝 Special Thanks
+    This project was created to help preserve and share Little Rock's educational heritage with 
+    new generations. Special thanks to all the historians, educators, and community members who 
+    have helped preserve these important stories.
+    </div>
+    """, unsafe_allow_html=True)
+
+elif page == "📚 Sources":
+    st.markdown('<p class="big-font">Our Historical Sources 📚</p>', unsafe_allow_html=True)
+    
+    st.markdown("""
+    ### 📖 Building Knowledge from Trusted Sources
+    
+    My knowledge comes from these carefully selected scholarly works and historical documents:
+    """)
+    
+    st.markdown("""
+    <div class="source-card">
+    <h4>1. Jones-Wilson's "A Traditional Model of Educational Excellence: Dunbar High School"</h4>
+    Published: 1981<br>
+    Focus: Dunbar's educational legacy and community impact<br>
+    Key aspects: Teaching methods, academic achievements, community influence
+    </div>
+    
+    <div class="source-card">
+    <h4>2. Gordy's "Finding the Lost Year"</h4>
+    Published: 2009<br>
+    Focus: School closure period and its impact<br>
+    Key aspects: Community testimonies, historical documentation, social impact
+    </div>
+    
+    <div class="source-card">
+    <h4>3. Ross and Fulk's "Grand Central"</h4>
+    Published: 1983<br>
+    Focus: Central High School history (1927-1983)<br>
+    Key aspects: Architectural significance, institutional development, key events
+    </div>
+    
+    <div class="source-card">
+    <h4>4. Stewart's "First Class: Legacy of Dunbar"</h4>
+    Published: 2013<br>
+    Focus: Dunbar's significance in African American education<br>
+    Key aspects: Cultural impact, community perspectives, long-term influence
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    ### 📍 Additional Resources
+    
+    For more information, visit:
+    - Central High National Historic Site Visitor Center
+    - Little Rock Central High School National Historic Site Library
+    - Butler Center for Arkansas Studies
+    - UALR Center for Arkansas History and Culture
+    """)
+
+# Footer
+st.markdown("---")
+st.markdown("*LR SchoolBot - Exploring Little Rock's Educational Heritage* 📚")
