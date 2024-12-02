@@ -65,12 +65,12 @@ if 'messages' not in st.session_state:
 def get_assistant_response(messages):
     """Get response from OpenAI API"""
     try:
-        response = openai.ChatCompletion.create(
+        response = openai.chat.completions.create(  # Updated this line
             model="gpt-3.5-turbo",
             messages=messages,
             temperature=0.7
         )
-        return response.choices[0].message["content"]
+        return response.choices[0].message.content  # Updated this line
     except Exception as e:
         st.error(f"Error: {str(e)}")
         return None
