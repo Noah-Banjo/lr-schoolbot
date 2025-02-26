@@ -4,6 +4,8 @@ from datetime import datetime
 import folium
 from streamlit_folium import folium_static
 from prompts import SYSTEM_PROMPT
+from analytics import ArchivalChatbotAnalytics
+import datetime
 
 # Initialize OpenAI client
 openai.api_key = st.secrets["OPENAI_API_KEY"]
@@ -99,8 +101,21 @@ if 'messages' not in st.session_state:
         {"role": "system", "content": SYSTEM_PROMPT}
     ]
 
-def get_assistant_response(messages):
+# Initialize analytics tracking
+if 'analytics' not in st.session_state:
+    st.session_state.analytics = ArchivalChatbotAnalytics(
+        storage_type="sqlite",
+        db_path="analytics.db", 
+        log_dir="analytics_logs"
+    )
+    # Start a new session
+    st.session_state.analytics.start_session()
+    st.session_state.last_interaction_id = None
+
+def get_assistant_response(messages, user_input):
     """Get response from OpenAI API"""
+    start_time = datetime.datetime.now()
+    
     try:
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo",
@@ -109,7 +124,23 @@ def get_assistant_response(messages):
             presence_penalty=0.6,
             frequency_penalty=0.3
         )
-        return response.choices[0].message.content
+        response_text = response.choices[0].message.content
+        
+        # Record when processing finished
+        end_time = datetime.datetime.now()
+        
+        # Track this interaction
+        if 'analytics' in st.session_state:
+            interaction_id = st.session_state.analytics.track_interaction(
+                query=user_input,
+                response=response_text,
+                start_time=start_time,
+                end_time=end_time
+            )
+            # Store for potential feedback
+            st.session_state.last_interaction_id = interaction_id
+            
+        return response_text
     except Exception as e:
         st.error(f"Error: {str(e)}")
         return None
@@ -245,7 +276,7 @@ elif page == "Chat with SchoolBot":
 
             if submit_button and user_input:
                 st.session_state['messages'].append({"role": "user", "content": user_input})
-                response = get_assistant_response(st.session_state['messages'])
+                response = get_assistant_response(st.session_state['messages'], user_input)
                 if response:
                     st.session_state['messages'].append({"role": "assistant", "content": response})
 
@@ -257,6 +288,25 @@ elif page == "Chat with SchoolBot":
                     st.markdown(f"👤 **You:** {message['content']}")
                 else:
                     st.markdown(f"🤖 **SchoolBot:** {message['content']}")
+            
+            # Add feedback buttons if we have a last interaction
+            if 'last_interaction_id' in st.session_state and st.session_state.last_interaction_id:
+                st.markdown("### Was this helpful?")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    if st.button("👍 Yes, thanks!"):
+                        st.session_state.analytics.track_feedback(
+                            st.session_state.last_interaction_id, 
+                            feedback_score=5
+                        )
+                        st.success("Thanks for your feedback!")
+                with col3:
+                    if st.button("👎 Not really"):
+                        st.session_state.analytics.track_feedback(
+                            st.session_state.last_interaction_id, 
+                            feedback_score=1
+                        )
+                        st.success("Thanks for your feedback!")
         st.markdown('</div>', unsafe_allow_html=True)
 
 elif page == "School Locations":
@@ -379,8 +429,6 @@ elif page == "Sources":
     </div>
     
     <div class="source-card">
-    <h
-    <div class="source-card">
     <h4>4. Stewart's "First Class: Legacy of Dunbar"</h4>
     Published: 2013<br>
     Focus: Dunbar's significance in African American education<br>
@@ -401,3 +449,12 @@ elif page == "Sources":
 # Footer
 st.markdown("---")
 st.markdown("*LR SchoolBot - Exploring Little Rock's Educational Heritage* 📚")
+
+# Handle session end
+def on_session_end():
+    if 'analytics' in st.session_state:
+        st.session_state.analytics.end_session()
+
+# Register session end handler
+import atexit
+atexit.register(on_session_end)
