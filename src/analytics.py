@@ -768,3 +768,42 @@ class ArchivalChatbotAnalytics:
     def _calculate_complexity_progression(self):
         """Calculate progression of query complexity over the session"""
         if self.interaction_count < 2:
+            return 0.0
+        
+        # Get query complexity over time
+        if self.storage_type == "sqlite":
+            conn = sqlite3.connect(self.db_path)
+            cursor = conn.cursor()
+            cursor.execute(
+                '''SELECT query_complexity FROM query_analytics 
+                WHERE session_id = ? ORDER BY rowid''',
+                (self.session_id,)
+            )
+            complexity_values = [row[0] for row in cursor.fetchall()]
+            conn.close()
+        else:
+            # CSV storage
+            query_df = pd.read_csv(self.query_analytics_csv)
+            session_queries = query_df[query_df.session_id == self.session_id]
+            complexity_values = session_queries["query_complexity"].tolist()
+        
+        # Calculate progression (simple linear trend)
+        if len(complexity_values) >= 2:
+            # Calculate slope of complexity values
+            x = list(range(len(complexity_values)))
+            y = complexity_values
+            
+            # Simple linear regression slope calculation
+            n = len(x)
+            sum_x = sum(x)
+            sum_y = sum(y)
+            sum_xy = sum(x_i * y_i for x_i, y_i in zip(x, y))
+            sum_xx = sum(x_i * x_i for x_i in x)
+            
+            try:
+                slope = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x)
+                return round(slope, 2)
+            except ZeroDivisionError:
+                return 0.0
+        else:
+            return 0.0
