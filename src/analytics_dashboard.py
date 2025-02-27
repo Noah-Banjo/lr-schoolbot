@@ -117,7 +117,7 @@ def check_password():
 if not check_password():
     st.stop()  # Do not continue if check_password is not True.
 
-# Check if database exists
+
 # Check if database exists
 # Debug information section
 st.sidebar.markdown("### Debugging Info")
