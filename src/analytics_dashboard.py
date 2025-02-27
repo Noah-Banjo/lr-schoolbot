@@ -147,6 +147,44 @@ if db_path is None:
     st.error(f"Database file not found in any expected location. Using default path: {db_path}")
     st.stop()
 
+# If no database is found, create a simple test database
+if db_path is None or not os.path.exists(db_path):
+    st.sidebar.warning("No database found. Creating a test database...")
+    db_path = "test_analytics.db"
+    
+    # Create a simple test database
+    import sqlite3
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    # Create basic tables
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS sessions (
+        session_id TEXT PRIMARY KEY,
+        user_id TEXT,
+        start_time TIMESTAMP,
+        device_type TEXT
+    )
+    ''')
+    
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS interactions (
+        interaction_id TEXT PRIMARY KEY,
+        session_id TEXT,
+        timestamp TIMESTAMP,
+        query TEXT,
+        response TEXT
+    )
+    ''')
+    
+    # Add some test data
+    cursor.execute("INSERT OR IGNORE INTO sessions VALUES ('test-session', 'test-user', CURRENT_TIMESTAMP, 'desktop')")
+    cursor.execute("INSERT OR IGNORE INTO interactions VALUES ('test-interaction', 'test-session', CURRENT_TIMESTAMP, 'test query', 'test response')")
+    
+    conn.commit()
+    conn.close()
+    
+    st.sidebar.success(f"Created test database at: {db_path}")
 # Database connection
 
 # Database connection
