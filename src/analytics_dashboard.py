@@ -118,10 +118,36 @@ if not check_password():
     st.stop()  # Do not continue if check_password is not True.
 
 # Check if database exists
-db_path = "analytics.db"
-if not os.path.exists(db_path):
-    st.error(f"Database file {db_path} not found. No analytics data available yet.")
+# Check if database exists
+# Debug information section
+st.sidebar.markdown("### Debugging Info")
+st.sidebar.write("Working directory:", os.getcwd())
+st.sidebar.write("Files in directory:", os.listdir())
+
+# Check if analytics.db exists in various locations
+locations_to_check = [
+    "analytics.db",  # Current directory
+    "../analytics.db",  # One level up
+    "../../analytics.db",  # Two levels up
+    "/mount/src/analytics.db",  # Common Streamlit Cloud path
+    "/app/analytics.db"  # Another possible path
+]
+
+db_path = None
+for location in locations_to_check:
+    exists = os.path.exists(location)
+    st.sidebar.write(f"'{location}' exists: {exists}")
+    if exists:
+        st.sidebar.success(f"Found database at: {location}")
+        db_path = location
+        break
+
+if db_path is None:
+    db_path = "analytics.db"  # Fall back to default path
+    st.error(f"Database file not found in any expected location. Using default path: {db_path}")
     st.stop()
+
+# Database connection
 
 # Database connection
 @st.cache_resource
