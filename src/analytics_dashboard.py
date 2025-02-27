@@ -7,6 +7,15 @@ from datetime import datetime, timedelta
 import json
 import os
 
+# Add this near the top of the file after your imports
+import os
+import streamlit as st
+
+# Debug information
+st.write("Current working directory:", os.getcwd())
+st.write("Files in current directory:", os.listdir())
+st.write("Database file exists:", os.path.exists("analytics.db"))
+
 st.set_page_config(
     page_title="LR SchoolBot Analytics",
     page_icon="📊",
