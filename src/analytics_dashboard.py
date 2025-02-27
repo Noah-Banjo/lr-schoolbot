@@ -194,6 +194,11 @@ def get_connection():
 
 try:
     conn = get_connection()
+# Register a callback to close the database when the script finishes
+def close_connection():
+    conn.close()
+import atexit
+atexit.register(close_connection)
 except Exception as e:
     st.error(f"Error connecting to database: {e}")
     st.stop()
