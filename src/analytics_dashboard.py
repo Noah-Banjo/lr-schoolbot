@@ -7,14 +7,41 @@ from datetime import datetime, timedelta
 import json
 import os
 
-# Add this near the top of the file after your imports
 import os
 import streamlit as st
 
-# Debug information
-st.write("Current working directory:", os.getcwd())
-st.write("Files in current directory:", os.listdir())
-st.write("Database file exists:", os.path.exists("analytics.db"))
+# Debug information section
+st.sidebar.markdown("### Debugging Info")
+st.sidebar.write("Working directory:", os.getcwd())
+st.sidebar.write("Files in directory:", os.listdir())
+
+# Check if analytics.db exists in various locations
+locations_to_check = [
+    "analytics.db",  # Current directory
+    "../analytics.db",  # One level up
+    "../../analytics.db",  # Two levels up
+    "/mount/src/analytics.db",  # Common Streamlit Cloud path
+    "/app/analytics.db"  # Another possible path
+]
+
+for location in locations_to_check:
+    exists = os.path.exists(location)
+    st.sidebar.write(f"'{location}' exists: {exists}")
+    if exists:
+        st.sidebar.success(f"Found database at: {location}")
+        db_path = location
+        break
+else:
+    st.sidebar.error("Database not found in any expected location")
+    # Create a dummy database for demonstration
+    st.sidebar.warning("Creating an empty database for demonstration")
+    import sqlite3
+    conn = sqlite3.connect("analytics.db")
+    cursor = conn.cursor()
+    cursor.execute("CREATE TABLE IF NOT EXISTS sessions (session_id TEXT PRIMARY KEY)")
+    conn.commit()
+    conn.close()
+    db_path = "analytics.db"
 
 st.set_page_config(
     page_title="LR SchoolBot Analytics",
