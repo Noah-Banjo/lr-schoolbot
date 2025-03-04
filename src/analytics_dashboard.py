@@ -5,6 +5,23 @@ import pandas as pd
 import plotly.express as px
 import datetime
 from datetime import timedelta
+
+# Debug information
+st.set_page_config(page_title="Debug Dashboard", page_icon="🔍", layout="wide")
+st.title("Analytics Dashboard Debug Mode")
+st.write("Current working directory:", os.getcwd())
+st.write("All files in current directory:", os.listdir())
+
+# Check data directory
+data_dir = "analytics_data"
+st.write(f"Data directory exists: {os.path.exists(data_dir)}")
+if os.path.exists(data_dir):
+    st.write(f"Files in {data_dir}:", os.listdir(data_dir))
+
+# Look for SQLite file
+st.write(f"SQLite database exists: {os.path.exists('analytics.db')}")
+
+
 st.sidebar.info("Using JSON-based analytics_dashboard.py file")  # In your main file
 st.set_page_config(
     page_title="SchoolBot Analytics Dashboard",
