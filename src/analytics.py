@@ -4,7 +4,7 @@ import uuid
 import datetime
 from textblob import TextBlob
 import streamlit as st
-
+st.sidebar.info("Using JSON-based analytics_dashboard.py file")  # In your main file
 class JSONAnalytics:
     """
     A simple analytics system that stores data in JSON files.
