@@ -102,12 +102,9 @@ if 'messages' not in st.session_state:
     ]
 
 # Initialize analytics tracking
+# Initialize analytics tracking
 if 'analytics' not in st.session_state:
-    st.session_state.analytics = ArchivalChatbotAnalytics(
-        storage_type="sqlite",
-        db_path="analytics.db", 
-        log_dir="analytics_logs"
-    )
+    st.session_state.analytics = JSONAnalytics()
     # Start a new session
     st.session_state.analytics.start_session()
     st.session_state.last_interaction_id = None
