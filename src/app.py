@@ -4,7 +4,7 @@ from datetime import datetime
 import folium
 from streamlit_folium import folium_static
 from prompts import SYSTEM_PROMPT
-from analytics import ArchivalChatbotAnalytics
+from analytics import JSONAnalytics
 import datetime
 
 # Initialize OpenAI client
