@@ -5,7 +5,7 @@ import pandas as pd
 import plotly.express as px
 import datetime
 from datetime import timedelta
-
+st.sidebar.info("Using JSON-based analytics_dashboard.py file")  # In your main file
 st.set_page_config(
     page_title="SchoolBot Analytics Dashboard",
     page_icon="📊",
