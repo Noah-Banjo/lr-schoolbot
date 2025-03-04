@@ -6,20 +6,15 @@ import plotly.express as px
 import datetime
 from datetime import timedelta
 
-# This MUST be the first Streamlit command in the file
+# This MUST be the first Streamlit command - nothing can come before this
 st.set_page_config(
     page_title="SchoolBot Analytics Dashboard",
     page_icon="📊",
     layout="wide"
 )
 
-# Debug info and other commands can go here AFTER set_page_config
+# Debug info and other commands can go after set_page_config
 st.sidebar.info("Using JSON-based analytics_dashboard.py file")
-st.set_page_config(
-    page_title="SchoolBot Analytics Dashboard",
-    page_icon="📊",
-    layout="wide"
-)
 
 # Custom CSS
 st.markdown("""
