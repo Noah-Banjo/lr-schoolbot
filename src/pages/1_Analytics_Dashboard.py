@@ -1,17 +1,32 @@
 import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-import sqlite3
-from datetime import datetime, timedelta
 import json
 import os
+import pandas as pd
+import plotly.express as px
+import datetime
+from datetime import timedelta
 
+# Debug information
+st.set_page_config(page_title="Debug Dashboard", page_icon="🔍", layout="wide")
+st.title("Analytics Dashboard Debug Mode")
+st.write("Current working directory:", os.getcwd())
+st.write("All files in current directory:", os.listdir())
+
+# Check data directory
+data_dir = "analytics_data"
+st.write(f"Data directory exists: {os.path.exists(data_dir)}")
+if os.path.exists(data_dir):
+    st.write(f"Files in {data_dir}:", os.listdir(data_dir))
+
+# Look for SQLite file
+st.write(f"SQLite database exists: {os.path.exists('analytics.db')}")
+
+
+st.sidebar.info("Using JSON-based analytics_dashboard.py file")  # In your main file
 st.set_page_config(
-    page_title="LR SchoolBot Analytics",
+    page_title="SchoolBot Analytics Dashboard",
     page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
 # Custom CSS
@@ -81,22 +96,58 @@ def check_password():
 if not check_password():
     st.stop()  # Do not continue if check_password is not True.
 
-# Check if database exists
-db_path = "analytics.db"
-if not os.path.exists(db_path):
-    st.error(f"Database file {db_path} not found. No analytics data available yet.")
-    st.stop()
+# Check if analytics data exists
+data_dir = "analytics_data"
+sessions_file = os.path.join(data_dir, "sessions.json")
+interactions_file = os.path.join(data_dir, "interactions.json")
+feedback_file = os.path.join(data_dir, "feedback.json")
 
-# Database connection
-@st.cache_resource
-def get_connection():
-    return sqlite3.connect(db_path, check_same_thread=False)
+# Display debugging info
+st.sidebar.markdown("### Data Files")
+st.sidebar.write(f"Sessions file exists: {os.path.exists(sessions_file)}")
+st.sidebar.write(f"Interactions file exists: {os.path.exists(interactions_file)}")
+st.sidebar.write(f"Feedback file exists: {os.path.exists(feedback_file)}")
 
+# Initialize with empty data if files don't exist
+if not os.path.exists(data_dir):
+    os.makedirs(data_dir, exist_ok=True)
+    
+if not os.path.exists(sessions_file):
+    with open(sessions_file, 'w') as f:
+        json.dump([], f)
+        
+if not os.path.exists(interactions_file):
+    with open(interactions_file, 'w') as f:
+        json.dump([], f)
+        
+if not os.path.exists(feedback_file):
+    with open(feedback_file, 'w') as f:
+        json.dump([], f)
+
+# Load data
 try:
-    conn = get_connection()
+    with open(sessions_file, 'r') as f:
+        sessions = json.load(f)
+    with open(interactions_file, 'r') as f:
+        interactions = json.load(f)
+    with open(feedback_file, 'r') as f:
+        feedback = json.load(f)
 except Exception as e:
-    st.error(f"Error connecting to database: {e}")
-    st.stop()
+    st.error(f"Error loading data: {e}")
+    sessions = []
+    interactions = []
+    feedback = []
+
+# Convert to pandas DataFrames
+try:
+    sessions_df = pd.DataFrame(sessions)
+    interactions_df = pd.DataFrame(interactions)
+    feedback_df = pd.DataFrame(feedback)
+except Exception as e:
+    st.error(f"Error converting to DataFrame: {e}")
+    sessions_df = pd.DataFrame()
+    interactions_df = pd.DataFrame()
+    feedback_df = pd.DataFrame()
 
 # Dashboard
 st.markdown('<p class="header-font">SchoolBot Analytics Dashboard</p>', unsafe_allow_html=True)
@@ -104,17 +155,14 @@ st.markdown('<p class="header-font">SchoolBot Analytics Dashboard</p>', unsafe_a
 # Date range filter
 st.sidebar.header("Filters")
 
-# Get the min and max dates from the database
-try:
-    date_range_df = pd.read_sql(
-        "SELECT MIN(start_time) as min_date, MAX(start_time) as max_date FROM sessions", 
-        conn
-    )
-    min_date = datetime.strptime(date_range_df['min_date'][0][:10], '%Y-%m-%d').date() if not pd.isna(date_range_df['min_date'][0]) else datetime.now().date() - timedelta(days=30)
-    max_date = datetime.strptime(date_range_df['max_date'][0][:10], '%Y-%m-%d').date() if not pd.isna(date_range_df['max_date'][0]) else datetime.now().date()
-except:
-    min_date = datetime.now().date() - timedelta(days=30)
-    max_date = datetime.now().date()
+# Get the min and max dates from the sessions data
+if not sessions_df.empty and 'start_time' in sessions_df.columns:
+    sessions_df['start_time'] = pd.to_datetime(sessions_df['start_time'])
+    min_date = sessions_df['start_time'].min().date()
+    max_date = sessions_df['start_time'].max().date()
+else:
+    min_date = datetime.datetime.now().date() - timedelta(days=30)
+    max_date = datetime.datetime.now().date()
 
 start_date = st.sidebar.date_input("Start Date", min_date)
 end_date = st.sidebar.date_input("End Date", max_date)
@@ -123,8 +171,24 @@ if start_date > end_date:
     st.sidebar.error("End date must be after start date")
     st.stop()
 
-date_filter = f"WHERE date(start_time) BETWEEN '{start_date}' AND '{end_date}'"
-interaction_date_filter = f"WHERE date(timestamp) BETWEEN '{start_date}' AND '{end_date}'"
+# Filter data by date
+if not sessions_df.empty and 'start_time' in sessions_df.columns:
+    sessions_df['start_time'] = pd.to_datetime(sessions_df['start_time'])
+    filtered_sessions = sessions_df[
+        (sessions_df['start_time'].dt.date >= start_date) & 
+        (sessions_df['start_time'].dt.date <= end_date)
+    ]
+else:
+    filtered_sessions = pd.DataFrame()
+
+if not interactions_df.empty and 'timestamp' in interactions_df.columns:
+    interactions_df['timestamp'] = pd.to_datetime(interactions_df['timestamp'])
+    filtered_interactions = interactions_df[
+        (interactions_df['timestamp'].dt.date >= start_date) & 
+        (interactions_df['timestamp'].dt.date <= end_date)
+    ]
+else:
+    filtered_interactions = pd.DataFrame()
 
 # Top metrics
 st.markdown("## 📈 Key Metrics")
@@ -134,167 +198,68 @@ with metrics_container:
     col1, col2, col3, col4 = st.columns(4)
     
     # Total users
-    try:
-        users_df = pd.read_sql(f"SELECT COUNT(DISTINCT user_id) as count FROM sessions {date_filter}", conn)
-        col1.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-value">{users_df['count'].iloc[0]}</div>
-                <div class="metric-label">Unique Users</div>
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
-    except Exception as e:
-        st.error(f"Error loading users metric: {e}")
-        col1.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-value">0</div>
-                <div class="metric-label">Unique Users</div>
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
+    if not filtered_sessions.empty and 'user_id' in filtered_sessions.columns:
+        unique_users = filtered_sessions['user_id'].nunique()
+    else:
+        unique_users = 0
+        
+    col1.markdown(
+        f"""
+        <div class="metric-card">
+            <div class="metric-value">{unique_users}</div>
+            <div class="metric-label">Unique Users</div>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
     
     # Total sessions
-    try:
-        sessions_df = pd.read_sql(f"SELECT COUNT(*) as count FROM sessions {date_filter}", conn)
-        col2.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-value">{sessions_df['count'].iloc[0]}</div>
-                <div class="metric-label">Total Sessions</div>
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
-    except Exception as e:
-        st.error(f"Error loading sessions metric: {e}")
-        col2.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-value">0</div>
-                <div class="metric-label">Total Sessions</div>
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
+    if not filtered_sessions.empty:
+        total_sessions = len(filtered_sessions)
+    else:
+        total_sessions = 0
+        
+    col2.markdown(
+        f"""
+        <div class="metric-card">
+            <div class="metric-value">{total_sessions}</div>
+            <div class="metric-label">Total Sessions</div>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
     
     # Total interactions
-    try:
-        interactions_df = pd.read_sql(f"""
-            SELECT COUNT(*) as count FROM interactions 
-            WHERE session_id IN (SELECT session_id FROM sessions {date_filter})
-        """, conn)
-        col3.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-value">{interactions_df['count'].iloc[0]}</div>
-                <div class="metric-label">Total Interactions</div>
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
-    except Exception as e:
-        st.error(f"Error loading interactions metric: {e}")
-        col3.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-value">0</div>
-                <div class="metric-label">Total Interactions</div>
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
+    if not filtered_interactions.empty:
+        total_interactions = len(filtered_interactions)
+    else:
+        total_interactions = 0
+        
+    col3.markdown(
+        f"""
+        <div class="metric-card">
+            <div class="metric-value">{total_interactions}</div>
+            <div class="metric-label">Total Interactions</div>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
     
     # Avg. session duration
-    try:
-        duration_df = pd.read_sql(f"""
-            SELECT AVG(duration_seconds) as avg_duration FROM sessions 
-            {date_filter} AND duration_seconds IS NOT NULL
-        """, conn)
-        avg_duration_min = round(duration_df['avg_duration'].iloc[0] / 60, 1) if not pd.isna(duration_df['avg_duration'].iloc[0]) else 0
-        col4.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-value">{avg_duration_min}</div>
-                <div class="metric-label">Avg. Session (mins)</div>
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
-    except Exception as e:
-        st.error(f"Error loading duration metric: {e}")
-        col4.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-value">0</div>
-                <div class="metric-label">Avg. Session (mins)</div>
-            </div>
-            """, 
-            unsafe_allow_html=True
-        )
-
-# Usage trends
-st.markdown("## 🔍 Usage Analysis")
-
-usage_container = st.container()
-with usage_container:
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Daily sessions chart
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.subheader("Daily Sessions")
+    if not filtered_sessions.empty and 'duration_seconds' in filtered_sessions.columns:
+        avg_duration = filtered_sessions['duration_seconds'].mean() / 60  # Convert to minutes
+    else:
+        avg_duration = 0
         
-        try:
-            sessions_by_day = pd.read_sql(f"""
-                SELECT date(start_time) as date, COUNT(*) as count 
-                FROM sessions {date_filter}
-                GROUP BY date(start_time) 
-                ORDER BY date(start_time)
-            """, conn)
-            
-            if not sessions_by_day.empty:
-                fig = px.line(sessions_by_day, x='date', y='count', 
-                            title="Sessions per Day",
-                            markers=True)
-                fig.update_layout(xaxis_title="Date", yaxis_title="Number of Sessions")
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("No session data available for the selected date range")
-        except Exception as e:
-            st.error(f"Error loading sessions chart: {e}")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col2:
-        # Interactions per session
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.subheader("User Engagement")
-        
-        try:
-            session_interactions = pd.read_sql(f"""
-                SELECT s.session_id, COUNT(i.interaction_id) as interaction_count
-                FROM sessions s
-                LEFT JOIN interactions i ON s.session_id = i.session_id
-                {date_filter}
-                GROUP BY s.session_id
-            """, conn)
-            
-            if not session_interactions.empty:
-                fig = px.histogram(session_interactions, x='interaction_count',
-                                 title="Interactions per Session",
-                                 labels={'interaction_count': 'Number of Interactions'})
-                fig.update_layout(xaxis_title="Interactions per Session", yaxis_title="Number of Sessions")
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("No interaction data available for the selected date range")
-        except Exception as e:
-            st.error(f"Error loading interactions chart: {e}")
-            
-        st.markdown('</div>', unsafe_allow_html=True)
+    col4.markdown(
+        f"""
+        <div class="metric-card">
+            <div class="metric-value">{avg_duration:.1f}</div>
+            <div class="metric-label">Avg. Session (mins)</div>
+        </div>
+        """, 
+        unsafe_allow_html=True
+    )
 
 # Query Analysis
 st.markdown("## 💬 Query Analysis")
@@ -308,329 +273,97 @@ with query_container:
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         st.subheader("Query Types")
         
-        try:
-            query_types = pd.read_sql(f"""
-                SELECT query_type, COUNT(*) as count
-                FROM interactions
-                WHERE session_id IN (SELECT session_id FROM sessions {date_filter})
-                GROUP BY query_type
-                ORDER BY count DESC
-            """, conn)
+        if not filtered_interactions.empty and 'query_type' in filtered_interactions.columns:
+            query_types = filtered_interactions['query_type'].value_counts().reset_index()
+            query_types.columns = ['query_type', 'count']
             
             if not query_types.empty:
                 fig = px.pie(query_types, values='count', names='query_type',
-                            title="Query Types Distribution")
+                           title="Query Types Distribution")
                 st.plotly_chart(fig, use_container_width=True)
             else:
                 st.info("No query type data available for the selected date range")
-        except Exception as e:
-            st.error(f"Error loading query types chart: {e}")
+        else:
+            st.info("No query data available")
             
         st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        # Most common topics
+        # Topics
         st.markdown('<div class="chart-container">', unsafe_allow_html=True)
         st.subheader("Top Topics")
         
-        try:
-            # Extract topics from interactions (stored as JSON strings)
-            topics_data = pd.read_sql(f"""
-                SELECT topics
-                FROM interactions
-                WHERE session_id IN (SELECT session_id FROM sessions {date_filter})
-            """, conn)
-            
-            # Process topics (stored as JSON strings)
+        if not filtered_interactions.empty and 'topics' in filtered_interactions.columns:
+            # Flatten the topics list
             all_topics = []
-            for topic_json in topics_data['topics']:
-                try:
-                    if topic_json:
-                        topics = json.loads(topic_json)
-                        all_topics.extend(topics)
-                except:
-                    continue
+            for topics_list in filtered_interactions['topics']:
+                if topics_list:
+                    all_topics.extend(topics_list)
             
-            # Count topic frequencies
             if all_topics:
-                topic_counts = pd.DataFrame(
-                    {"topic": list(set(all_topics)), "count": [all_topics.count(t) for t in set(all_topics)]}
-                ).sort_values(by="count", ascending=False).head(10)
+                topic_counts = pd.Series(all_topics).value_counts().reset_index()
+                topic_counts.columns = ['topic', 'count']
                 
-                fig = px.bar(topic_counts, x='topic', y='count',
-                          title="Most Common Topics",
-                          color='count',
-                          color_continuous_scale='Blues')
-                fig.update_layout(xaxis_title="Topic", yaxis_title="Frequency")
+                fig = px.bar(topic_counts.head(10), x='topic', y='count',
+                          title="Most Common Topics")
                 st.plotly_chart(fig, use_container_width=True)
             else:
                 st.info("No topic data available for the selected date range")
-        except Exception as e:
-            st.error(f"Error loading topics chart: {e}")
+        else:
+            st.info("No topic data available")
             
         st.markdown('</div>', unsafe_allow_html=True)
 
-# Response Quality
-st.markdown("## ✅ Response Quality")
+# User Feedback
+st.markdown("## 👍 User Feedback")
 
-quality_container = st.container()
-with quality_container:
-    col1, col2 = st.columns(2)
+feedback_container = st.container()
+with feedback_container:
+    # Feedback distribution
+    st.markdown('<div class="chart-container">', unsafe_allow_html=True)
+    st.subheader("Feedback Ratings")
     
-    with col1:
-        # Success rate
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.subheader("Response Success Rate")
+    if not filtered_interactions.empty and 'feedback_score' in filtered_interactions.columns:
+        # Remove None values
+        feedback_data = filtered_interactions[filtered_interactions['feedback_score'].notna()]
         
-        try:
-            success_data = pd.read_sql(f"""
-                SELECT 
-                    CASE WHEN is_successful=1 THEN 'Successful' ELSE 'Unsuccessful' END as status,
-                    COUNT(*) as count
-                FROM interactions
-                WHERE session_id IN (SELECT session_id FROM sessions {date_filter})
-                GROUP BY is_successful
-            """, conn)
-            
-            if not success_data.empty:
-                fig = px.pie(success_data, values='count', names='status',
-                           title="Response Success Rate",
-                           color_discrete_map={'Successful': '#4CAF50', 'Unsuccessful': '#F44336'})
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("No response quality data available for the selected date range")
-        except Exception as e:
-            st.error(f"Error loading success rate chart: {e}")
-            
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col2:
-        # Feedback scores
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.subheader("User Feedback")
-        
-        try:
-            feedback_data = pd.read_sql(f"""
-                SELECT 
-                    feedback_score,
-                    COUNT(*) as count
-                FROM interactions
-                WHERE 
-                    session_id IN (SELECT session_id FROM sessions {date_filter})
-                    AND feedback_score IS NOT NULL
-                GROUP BY feedback_score
-            """, conn)
-            
-            if not feedback_data.empty:
-                # Map scores to labels
-                feedback_data['rating'] = feedback_data['feedback_score'].apply(
-                    lambda x: "👍 Positive" if x > 3 else "👎 Negative"
-                )
-                
-                fig = px.pie(feedback_data, values='count', names='rating',
-                           title="User Feedback Distribution",
-                           color_discrete_map={'👍 Positive': '#4CAF50', '👎 Negative': '#F44336'})
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("No feedback data available for the selected date range")
-        except Exception as e:
-            st.error(f"Error loading feedback chart: {e}")
-            
-        st.markdown('</div>', unsafe_allow_html=True)
-
-# Educational Impact Analysis
-st.markdown("## 🎓 Educational Impact")
-
-education_container = st.container()
-with education_container:
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Historical entities mentioned
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.subheader("Historical Topics Explored")
-        
-        try:
-            # Extract historical entities
-            entities_data = pd.read_sql(f"""
-                SELECT historical_entities
-                FROM interactions
-                WHERE session_id IN (SELECT session_id FROM sessions {date_filter})
-            """, conn)
-            
-            # Process entities (stored as JSON strings)
-            all_entities = []
-            for entity_json in entities_data['historical_entities']:
-                try:
-                    if entity_json:
-                        entities = json.loads(entity_json)
-                        all_entities.extend(entities)
-                except:
-                    continue
-            
-            # Count entity frequencies
-            if all_entities:
-                entity_counts = pd.DataFrame(
-                    {"entity": list(set(all_entities)), "count": [all_entities.count(e) for e in set(all_entities)]}
-                ).sort_values(by="count", ascending=False).head(10)
-                
-                fig = px.bar(entity_counts, x='count', y='entity',
-                          title="Most Referenced Historical Topics",
-                          orientation='h',
-                          color='count',
-                          color_continuous_scale='Viridis')
-                fig.update_layout(yaxis_title="Historical Topic", xaxis_title="Frequency")
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("No historical topics data available for the selected date range")
-        except Exception as e:
-            st.error(f"Error loading historical topics chart: {e}")
-            
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col2:
-        # Exploration depth
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.subheader("Learning Progression")
-        
-        try:
-            depth_data = pd.read_sql(f"""
-                SELECT 
-                    s.session_id,
-                    MAX(e.exploration_depth) as max_depth
-                FROM 
-                    sessions s
-                LEFT JOIN educational_metrics e ON s.session_id = e.session_id
-                {date_filter}
-                GROUP BY s.session_id
-                HAVING max_depth IS NOT NULL
-            """, conn)
-            
-            if not depth_data.empty and len(depth_data) > 0:
-                # Create depth categories
-                depth_data['depth_category'] = pd.cut(
-                    depth_data['max_depth'],
-                    bins=[0, 0.5, 1.0, 1.5, 2.0],
-                    labels=['Basic', 'Intermediate', 'Advanced', 'Expert']
-                )
-                
-                depth_counts = depth_data['depth_category'].value_counts().reset_index()
-                depth_counts.columns = ['category', 'count']
-                
-                fig = px.pie(depth_counts, values='count', names='category',
-                           title="Exploration Depth Distribution",
-                           color_discrete_sequence=px.colors.sequential.Blues_r)
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("No exploration depth data available for the selected date range")
-        except Exception as e:
-            st.error(f"Error loading exploration depth chart: {e}")
-            
-        st.markdown('</div>', unsafe_allow_html=True)
-
-# Device Analytics
-st.markdown("## 📱 Device Analytics")
-
-device_container = st.container()
-with device_container:
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Device types
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.subheader("Device Types")
-        
-        try:
-            device_data = pd.read_sql(f"""
-                SELECT 
-                    device_type,
-                    COUNT(*) as count
-                FROM sessions
-                {date_filter}
-                GROUP BY device_type
-            """, conn)
-            
-            if not device_data.empty:
-                fig = px.pie(device_data, values='count', names='device_type',
-                           title="Device Type Distribution")
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("No device data available for the selected date range")
-        except Exception as e:
-            st.error(f"Error loading device chart: {e}")
-            
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col2:
-        # New vs returning users
-        st.markdown('<div class="chart-container">', unsafe_allow_html=True)
-        st.subheader("User Types")
-        
-        try:
-            user_type_data = pd.read_sql(f"""
-                SELECT 
-                    CASE WHEN is_return_user=1 THEN 'Returning' ELSE 'New' END as user_type,
-                    COUNT(*) as count
-                FROM sessions
-                {date_filter}
-                GROUP BY is_return_user
-            """, conn)
-            
-            if not user_type_data.empty:
-                fig = px.pie(user_type_data, values='count', names='user_type',
-                           title="New vs. Returning Users",
-                           color_discrete_map={'Returning': '#1E88E5', 'New': '#FFC107'})
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("No user type data available for the selected date range")
-        except Exception as e:
-            st.error(f"Error loading user type chart: {e}")
-            
-        st.markdown('</div>', unsafe_allow_html=True)
-
-# Raw Data Exploration (Advanced)
-st.markdown("## 🔬 Raw Data Exploration")
-st.markdown("This section allows you to explore the raw data in your analytics database.")
-
-tables = ["sessions", "interactions", "query_analytics", "educational_metrics"]
-selected_table = st.selectbox("Select a table to explore", tables)
-
-if selected_table:
-    try:
-        # Get column names
-        cursor = conn.cursor()
-        cursor.execute(f"PRAGMA table_info({selected_table})")
-        columns = [row[1] for row in cursor.fetchall()]
-        
-        # Select which columns to display
-        selected_columns = st.multiselect(
-            "Select columns to display", 
-            columns, 
-            default=columns[:5]  # Default to first 5 columns
-        )
-        
-        if selected_columns:
-            # Query with limit
-            limit = st.slider("Number of rows to display", 5, 100, 20)
-            query = f"SELECT {', '.join(selected_columns)} FROM {selected_table} LIMIT {limit}"
-            
-            data = pd.read_sql(query, conn)
-            st.dataframe(data)
-            
-            # Option to download as CSV
-            csv = data.to_csv(index=False)
-            st.download_button(
-                label="Download data as CSV",
-                data=csv,
-                file_name=f"{selected_table}.csv",
-                mime="text/csv",
+        if not feedback_data.empty:
+            # Create categories
+            feedback_data['rating'] = feedback_data['feedback_score'].apply(
+                lambda x: "👍 Positive" if x > 3 else "👎 Negative"
             )
-    except Exception as e:
-        st.error(f"Error exploring raw data: {e}")
+            
+            feedback_counts = feedback_data['rating'].value_counts().reset_index()
+            feedback_counts.columns = ['rating', 'count']
+            
+            fig = px.pie(feedback_counts, values='count', names='rating',
+                      title="User Feedback Distribution",
+                      color_discrete_map={'👍 Positive': '#4CAF50', '👎 Negative': '#F44336'})
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No feedback data available for the selected date range")
+    else:
+        st.info("No feedback data available")
+        
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Raw Data Exploration
+st.markdown("## 🔬 Raw Data")
+
+# Sessions data
+st.subheader("Sessions")
+if not filtered_sessions.empty:
+    st.dataframe(filtered_sessions)
+else:
+    st.info("No session data available")
+
+# Interactions data
+st.subheader("Interactions")
+if not filtered_interactions.empty:
+    st.dataframe(filtered_interactions)
+else:
+    st.info("No interaction data available")
 
 # Footer
 st.markdown("---")
-st.markdown("*LR SchoolBot Analytics Dashboard* 📊")
-
-# Close database connection
-conn.close()
+st.markdown("*SchoolBot Analytics Dashboard* 📊")
