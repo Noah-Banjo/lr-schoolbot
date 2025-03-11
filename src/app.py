@@ -43,31 +43,36 @@ document.addEventListener('keydown', function(e) {
 </script>
 """, unsafe_allow_html=True)
 
-# Custom CSS
-body {
-    background-color: white !important;
-    color: #262730 !important;
-}
+# Custom CSS - This was the problematic part, now properly wrapped in st.markdown()
+st.markdown("""
+    <style>
+    body {
+        background-color: white !important;
+        color: #262730 !important;
+    }
 
-.stApp {
-    background-color: white !important;
-}
+    .stApp {
+        background-color: white !important;
+    }
 
-.st-emotion-cache-ue6h4q {
-    background-color: white !important;
-}
+    .st-emotion-cache-ue6h4q {
+        background-color: white !important;
+    }
 
-.st-emotion-cache-ffhzg2 {
-    background-color: white !important;
-}
+    .st-emotion-cache-ffhzg2 {
+        background-color: white !important;
+    }
 
-.st-emotion-cache-1avcm0n {
-    background-color: white !important;
-}
+    .st-emotion-cache-1avcm0n {
+        background-color: white !important;
+    }
 
-.css-18e3th9, .css-1d391kg {
-    background-color: white !important;
-}
+    .css-18e3th9, .css-1d391kg {
+        background-color: white !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 st.markdown("""
     <style>
     .big-font {
