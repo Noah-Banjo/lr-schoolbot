@@ -18,12 +18,32 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Force light theme by default
+# Force light theme by default and ensure consistent styling across devices
 st.markdown("""
     <style>
     .stApp {
         background-color: white;
         color: black;
+    }
+    
+    /* Target sidebar specifically across all devices */
+    [data-testid="stSidebar"], 
+    [data-testid="stSidebar"] .st-emotion-cache-16txtl3,
+    [data-testid="stSidebar"] section,
+    [data-testid="stSidebarNav"],
+    [data-testid="stSidebarContent"],
+    .st-emotion-cache-16idsys {
+        background-color: white !important;
+        color: black !important;
+    }
+    
+    /* Additional mobile-specific overrides */
+    @media (max-width: 768px) {
+        [data-testid="stSidebar"], 
+        [data-testid="stSidebar"] section,
+        [data-testid="stSidebarNav"] {
+            background-color: white !important;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
