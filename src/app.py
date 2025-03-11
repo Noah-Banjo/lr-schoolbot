@@ -10,13 +10,23 @@ import datetime
 # Initialize OpenAI client
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
-# Set page configuration
+# Set page configuration with light theme default
 st.set_page_config(
     page_title="LR SchoolBot",
     page_icon="🏫",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Force light theme by default
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: white;
+        color: black;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # Add JavaScript for Enter key handling
 st.markdown("""
@@ -101,7 +111,6 @@ if 'messages' not in st.session_state:
         {"role": "system", "content": SYSTEM_PROMPT}
     ]
 
-# Initialize analytics tracking
 # Initialize analytics tracking
 if 'analytics' not in st.session_state:
     st.session_state.analytics = JSONAnalytics()
@@ -193,6 +202,25 @@ with st.sidebar:
         "",
         ["Home", "Chat with SchoolBot", "School Locations", "About", "Sources"]
     )
+    
+    # Add theme selector at the bottom of sidebar
+    st.markdown("---")
+    theme = st.radio(
+        "Theme",
+        ["Light", "Dark"],
+        index=0  # Default to light
+    )
+    
+    # Apply dark theme if selected
+    if theme == "Dark":
+        st.markdown("""
+            <style>
+            .stApp {
+                background-color: #0E1117;
+                color: white;
+            }
+            </style>
+            """, unsafe_allow_html=True)
 
 # Main content
 if page == "Home":
