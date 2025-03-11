@@ -299,7 +299,12 @@ if page == "Home":
     """)
 
     st.markdown("### ✨ Fun Fact of the Day")
-    st.info("Did you know? Central High School's building is so special, it's a National Historic Site! That means it's as important as the Statue of Liberty! 🗽")
+    # Replace st.info with custom styled markdown for better visibility
+    st.markdown("""
+    <div style="background-color: #FFF4DE; color: #664500; padding: 20px; border-radius: 10px; border-left: 5px solid #FFA500;">
+    <strong>Did you know?</strong> Central High School's building is so special, it's a National Historic Site! That means it's as important as the Statue of Liberty! 🗽
+    </div>
+    """, unsafe_allow_html=True)
 
 elif page == "Chat with SchoolBot":
     st.markdown('<p class="big-font">Chat with LR SchoolBot! 🤖</p>', unsafe_allow_html=True)
