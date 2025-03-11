@@ -44,6 +44,30 @@ document.addEventListener('keydown', function(e) {
 """, unsafe_allow_html=True)
 
 # Custom CSS
+body {
+    background-color: white !important;
+    color: #262730 !important;
+}
+
+.stApp {
+    background-color: white !important;
+}
+
+.st-emotion-cache-ue6h4q {
+    background-color: white !important;
+}
+
+.st-emotion-cache-ffhzg2 {
+    background-color: white !important;
+}
+
+.st-emotion-cache-1avcm0n {
+    background-color: white !important;
+}
+
+.css-18e3th9, .css-1d391kg {
+    background-color: white !important;
+}
 st.markdown("""
     <style>
     .big-font {
