@@ -244,9 +244,34 @@ with st.sidebar:
     if theme == "Dark":
         st.markdown("""
             <style>
-            .stApp {
-                background-color: #0E1117;
-                color: white;
+            .stApp, body, .st-emotion-cache-ue6h4q, .st-emotion-cache-ffhzg2, .st-emotion-cache-1avcm0n, 
+            .css-18e3th9, .css-1d391kg {
+                background-color: #0E1117 !important;
+                color: white !important;
+            }
+            .chat-container, .about-section, .map-container {
+                background-color: #1E1E1E !important;
+                color: white !important;
+            }
+            .school-card {
+                background-color: #2D2D2D !important;
+                color: white !important;
+            }
+            .source-card {
+                background-color: #1E1E1E !important;
+                color: white !important;
+                border-left: 5px solid #3B71CA !important;
+            }
+            .visitor-info {
+                background-color: #1E1E1E !important;
+                color: white !important;
+            }
+            .stButton button {
+                color: white !important;
+            }
+            .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, 
+            .stMarkdown h5, .stMarkdown h6, .stMarkdown li {
+                color: white !important;
             }
             </style>
             """, unsafe_allow_html=True)
