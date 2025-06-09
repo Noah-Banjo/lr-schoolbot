@@ -1,0 +1,29 @@
+name: Keep App Alive
+
+on:
+  schedule:
+    - cron: '*/8 * * * *'  # Every 8 minutes
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping main app
+        run: |
+          echo "Pinging main app..."
+          curl -s -L --max-time 20 "https://lr-schoolbot-j8jjpn6y9fgq2g7yhqt3wr.streamlit.app/" > /dev/null
+          echo "Main app pinged"
+          
+      - name: Ping with different user agent
+        run: |
+          echo "Pinging with different user agent..."
+          curl -s -L --max-time 20 -H "User-Agent: Mozilla/5.0 (compatible; KeepAlive/1.0)" "https://lr-schoolbot-j8jjpn6y9fgq2g7yhqt3wr.streamlit.app/" > /dev/null
+          echo "Second ping completed"
+          
+      - name: Wait and ping again
+        run: |
+          sleep 30
+          echo "Final ping..."
+          curl -s -L --max-time 20 "https://lr-schoolbot-j8jjpn6y9fgq2g7yhqt3wr.streamlit.app/" > /dev/null
+          echo "All pings completed successfully"
