@@ -8,7 +8,8 @@ from analytics import JSONAnalytics
 import datetime
 
 # Initialize OpenAI client
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+import os
+openai.api_key = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY", "")
 
 # Set page configuration with light theme default
 st.set_page_config(
