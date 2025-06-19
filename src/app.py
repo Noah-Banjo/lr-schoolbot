@@ -10,7 +10,11 @@ import datetime
 # Initialize OpenAI client
 import os
 from openai import OpenAI
-client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+api_key = os.environ.get("OPENAI_API_KEY")
+if not api_key:
+    st.error("⚠️ OpenAI API key not found! Please check environment variables.")
+    st.stop()
+client = OpenAI(api_key=api_key)
 
 # Set page configuration with light theme default
 st.set_page_config(
