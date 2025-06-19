@@ -154,7 +154,7 @@ def get_assistant_response(messages, user_input):
     start_time = datetime.datetime.now()
     
     try:
-        response = openai.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=messages,
             temperature=0.8,
