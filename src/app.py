@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+import os
 from datetime import datetime
 import folium
 from streamlit_folium import folium_static
@@ -7,14 +7,33 @@ from prompts import SYSTEM_PROMPT
 from analytics import JSONAnalytics
 import datetime
 
-# Initialize OpenAI client
-import os
-from openai import OpenAI
-api_key = os.environ.get("OPENAI_API_KEY")
-if not api_key:
-    st.error("⚠️ OpenAI API key not found! Please check environment variables.")
+# Initialize OpenAI client with fallback for both Railway and Streamlit
+try:
+    from openai import OpenAI
+    
+    # Try multiple sources for API key
+    api_key = None
+    
+    # First try environment variable (Railway)
+    if os.environ.get("OPENAI_API_KEY"):
+        api_key = os.environ.get("OPENAI_API_KEY")
+    
+    # Then try Streamlit secrets (Streamlit Cloud)
+    elif hasattr(st, 'secrets') and "OPENAI_API_KEY" in st.secrets:
+        api_key = st.secrets["OPENAI_API_KEY"]
+    
+    if api_key:
+        client = OpenAI(api_key=api_key)
+    else:
+        st.error("⚠️ OpenAI API key not found! Please add OPENAI_API_KEY to environment variables or Streamlit secrets.")
+        st.stop()
+        
+except ImportError:
+    st.error("OpenAI library not found. Please install: pip install openai")
     st.stop()
-client = OpenAI(api_key=api_key)
+except Exception as e:
+    st.error(f"Error initializing OpenAI client: {str(e)}")
+    st.stop()
 
 # Set page configuration with light theme default
 st.set_page_config(
@@ -49,7 +68,7 @@ document.addEventListener('keydown', function(e) {
 </script>
 """, unsafe_allow_html=True)
 
-# Custom CSS - This was the problematic part, now properly wrapped in st.markdown()
+# Custom CSS
 st.markdown("""
     <style>
     body {
@@ -76,11 +95,7 @@ st.markdown("""
     .css-18e3th9, .css-1d391kg {
         background-color: white !important;
     }
-    </style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-    <style>
+    
     .big-font {
         font-size:30px !important;
         font-weight: bold;
@@ -238,10 +253,7 @@ with st.sidebar:
         ["Home", "Chat with SchoolBot", "School Locations", "About", "Sources"]
     )
     
-    # No theme selector - removed
     st.markdown("---")
-    
-    # Additional sidebar information or decoration could go here if desired
 
 # Main content
 if page == "Home":
@@ -291,7 +303,6 @@ if page == "Home":
     """)
 
     st.markdown("### ✨ Fun Fact of the Day")
-    # Replace st.info with custom styled markdown for better visibility
     st.markdown("""
     <div style="background-color: #FFF4DE; color: #664500; padding: 20px; border-radius: 10px; border-left: 5px solid #FFA500;">
     <strong>Did you know?</strong> Central High School's building is so special, it's a National Historic Site! That means it's as important as the Statue of Liberty! 🗽
