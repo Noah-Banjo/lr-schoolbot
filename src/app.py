@@ -442,20 +442,28 @@ elif page == "About":
     
     <h3>🎯 My Purpose</h3>
     <ul>
-    <li>Share the amazing history of these schools</li>
-    <li>Help people learn about civil rights and education</li>
-    <li>Connect you with historical resources</li>
+    <li>Share the amazing history of these schools, especially Dunbar High School</li>
+    <li>Help people learn about educational excellence and community impact</li>
+    <li>Connect you with historical resources and information</li>
     <li>Make learning history fun and interactive!</li>
     </ul>
     
     <h3>🎓 My Knowledge</h3>
-    I'm trained on carefully selected historical sources and scholarly works about both schools. 
-    While I know a lot, I'm always happy to direct you to additional resources for deeper research!
+    My primary expertise comes from Jones-Wilson's scholarly research on Dunbar High School's 
+    educational excellence. I also have general knowledge about Central High School's historical 
+    significance. For topics beyond my source material, I'm happy to direct you to additional 
+    resources for deeper research!
+    
+    <h3>📚 Research Foundation</h3>
+    This project demonstrates how AI can help make archival research and educational heritage 
+    more accessible. It's part of the broader ArchivAI research initiative exploring AI 
+    applications in digital preservation and historical education.
     
     <h3>💝 Special Thanks</h3>
     This project was created to help preserve and share Little Rock's educational heritage with 
     new generations. Special thanks to all the historians, educators, and community members who 
-    have helped preserve these important stories.
+    have helped preserve these important stories, and to the researchers whose work makes projects 
+    like this possible.
     </div>
     """, unsafe_allow_html=True)
 
@@ -465,47 +473,53 @@ elif page == "Sources":
     st.markdown("""
     ### 📖 Building Knowledge from Trusted Sources
     
-    My knowledge comes from these carefully selected scholarly works and historical documents:
+    My knowledge comes from this carefully selected scholarly work and general historical information:
     """)
     
     st.markdown("""
     <div class="source-card">
-    <h4>1. Jones-Wilson's "A Traditional Model of Educational Excellence: Dunbar High School"</h4>
+    <h4>Jones-Wilson's "A Traditional Model of Educational Excellence: Dunbar High School"</h4>
     Published: 1981<br>
     Focus: Dunbar's educational legacy and community impact<br>
-    Key aspects: Teaching methods, academic achievements, community influence
-    </div>
-    
-    <div class="source-card">
-    <h4>2. Gordy's "Finding the Lost Year"</h4>
-    Published: 2009<br>
-    Focus: School closure period and its impact<br>
-    Key aspects: Community testimonies, historical documentation, social impact
-    </div>
-    
-    <div class="source-card">
-    <h4>3. Ross and Fulk's "Grand Central"</h4>
-    Published: 1983<br>
-    Focus: Central High School history (1927-1983)<br>
-    Key aspects: Architectural significance, institutional development, key events
-    </div>
-    
-    <div class="source-card">
-    <h4>4. Stewart's "First Class: Legacy of Dunbar"</h4>
-    Published: 2013<br>
-    Focus: Dunbar's significance in African American education<br>
-    Key aspects: Cultural impact, community perspectives, long-term influence
+    Key aspects: Teaching methods, academic achievements, community influence<br>
+    <br>
+    <em>This is my primary source for detailed information about Dunbar High School's history 
+    and educational significance. It provides insights into the school's role as a model of 
+    educational excellence and its impact on the community.</em>
     </div>
     """, unsafe_allow_html=True)
     
     st.markdown("""
-    ### 📍 Additional Resources
+    ### 🏫 Additional Context
     
-    For more information, visit:
-    - Central High National Historic Site Visitor Center
-    - Little Rock Central High School National Historic Site Library
-    - Butler Center for Arkansas Studies
-    - UALR Center for Arkansas History and Culture
+    For information about Central High School and broader Little Rock educational history, I draw from:
+    - General historical knowledge about Central High School's significance in civil rights history
+    - Publicly available information about the school's architectural and historical importance
+    - Basic institutional facts and timeline information
+    
+    ### 📚 Limitations & Further Research
+    
+    While I focus primarily on information from the Jones-Wilson research about Dunbar High School, 
+    there's much more to discover! For comprehensive research on Little Rock's educational heritage, 
+    I recommend visiting:
+    
+    - **Butler Center for Arkansas Studies** - Little Rock Central Library
+    - **UALR Center for Arkansas History and Culture**
+    - **Central High Museum and Visitor Center**
+    - **Arkansas State Archives**
+    - **Little Rock School District Archives**
+    
+    ### 🔍 About This Project
+    
+    This SchoolBot demonstrates how AI can help make historical research more accessible and engaging. 
+    It's part of ongoing research into AI applications for digital archives and educational outreach, 
+    showing how technology can help preserve and share community heritage.
+    
+    ### 📖 Citation Information
+    
+    Primary Source:
+    Jones-Wilson, F. C. (1981). A Traditional Model of Educational Excellence: Dunbar High School. 
+    *The Journal of Negro Education*, 50(3), 331-345.
     """)
 
 # Footer
