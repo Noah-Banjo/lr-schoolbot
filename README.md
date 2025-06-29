@@ -240,7 +240,6 @@ We welcome collaboration with:
 
 ## 🙏 Acknowledgments
 
-**Academic Contributors:**
 - This project was done as a class project for the course Public History
 - Dr. F. C. Jones-Wilson for foundational research on Dunbar High School
 - Elizabeth Huckaby for documenting the Central High integration crisis
