@@ -240,7 +240,7 @@ We welcome collaboration with:
 
 ## 🙏 Acknowledgments
 
-- This project was done as a class project for the course Public History
+- This project was done as a class project for the course "Intro to Public History"
 - Dr. F. C. Jones-Wilson for foundational research on Dunbar High School
 - Elizabeth Huckaby for documenting the Central High integration crisis
 - UALR Center for Arkansas History and Culture for research support
